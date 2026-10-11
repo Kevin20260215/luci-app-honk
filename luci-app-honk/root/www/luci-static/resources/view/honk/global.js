@@ -64,25 +64,20 @@ return view.extend({
 			var newDash = uci.get('honk', sid, 'dashboard') || 'none';
 			var enabled = honk.isServiceEnabled();
 
-			if (newDash !== oldDash) {
-				return honk.switchDashboardAndWait(newDash).then(function(res) {
-					if (res && res.pending)
-						honk.showNotification(null, E('p', _('Saved, but the panel files are not installed yet — download the panel first.')), 'warning');
-					else if (res.running === false)
-						throw new Error(_('HONK did not come back up; check the logs'));
-				}).then(function() {
-					return ui.changes.apply(mode == '0');
-				});
-			}
+			var pre = (newDash !== oldDash) ? honk.switchDashboardAndWait(newDash).then(function(res) {
+				if (res && res.pending)
+					honk.showNotification(null, E('p', _('Saved, but the panel files are not installed yet — download the panel first.')), 'warning');
+				else if (res.running === false)
+					throw new Error(_('HONK did not come back up; check the logs'));
+			}) : Promise.resolve();
 
-			return ui.changes.apply(mode == '0').then(function() {
-				if (!enabled)
-					return honk.waitForHonkState(false);
-
-				return honk.waitForHonkState(true).then(function(st) {
-					if (st.running === false)
-						throw new Error(_('HONK did not come back up; check the logs'));
-				});
+			return pre.then(function() {
+				return honk.applyChangesAndWait(mode);
+			}).then(function() {
+				return honk.waitForHonkState(enabled);
+			}).then(function(st) {
+				if (enabled && st && st.running === false)
+					throw new Error(_('HONK did not come back up; check the logs'));
 			});
 		}).catch(function(err) {
 			honk.showNotification(null, E('p', _('Failed to apply configuration:') + ' ' + (err.message || err)), 'error');

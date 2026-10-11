@@ -123,6 +123,8 @@ function waitForHonkState(wantRunning, attempts) {
 
 				if (running === wantRunning || ++tries >= attempts) {
 					updateStatus(st);
+					if (poll && typeof(poll.start) === 'function')
+						poll.start();
 					resolve({ running: running, memory: st ? st.memory : null });
 				} else {
 					setTimeout(step, 1200);
@@ -130,6 +132,8 @@ function waitForHonkState(wantRunning, attempts) {
 			}).catch(function() {
 				if (++tries >= attempts) {
 					updateStatus({ running: false });
+					if (poll && typeof(poll.start) === 'function')
+						poll.start();
 					resolve({ running: null });
 				} else {
 					setTimeout(step, 1200);
@@ -155,6 +159,25 @@ function switchDashboardAndWait(type) {
 		return waitForHonkState(true).then(function(st) {
 			return { pending: false, running: st.running };
 		});
+	});
+}
+
+function applyChangesAndWait(mode) {
+	return new Promise(function(resolve) {
+		var timer = null;
+		var onApplied = function() {
+			if (timer) clearTimeout(timer);
+			document.removeEventListener('uci-applied', onApplied);
+			resolve();
+		};
+
+		var holdoff = (window.L && L.env && +L.env.apply_holdoff) || 4;
+		var timeout = (window.L && L.env && +L.env.apply_timeout) || 5;
+		timer = setTimeout(onApplied, (holdoff + timeout) * 1000);
+
+		document.addEventListener('uci-applied', onApplied);
+
+		ui.changes.apply(mode == '0');
 	});
 }
 
@@ -820,5 +843,6 @@ return baseclass.extend({
 	switchDashboardAndWait: switchDashboardAndWait,
 	isServiceEnabled: isServiceEnabled,
 	showNotification: showNotification,
-	updateStatus: updateStatus
+	updateStatus: updateStatus,
+	applyChangesAndWait: applyChangesAndWait
 });
