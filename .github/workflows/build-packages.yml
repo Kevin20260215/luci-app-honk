@@ -93,7 +93,7 @@ jobs:
           sed -i '/depends on KERNEL_DEBUG_INFO_BTF/d' honk/Makefile
 
       - name: Build packages
-        uses: sbwml/openwrt-gh-action-sdk@go1.26
+        uses: openwrt/gh-action-sdk@main
         env:
           ARCH: ${{ matrix.arch }}-${{ matrix.sdk }}
           FEEDNAME: packages_ci
