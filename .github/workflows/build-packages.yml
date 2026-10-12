@@ -163,7 +163,7 @@ jobs:
           path: dist/*
           if-no-files-found: error
           compression-level: 0
-          retention-days: 7
+          retention-days: 3
 
   release:
     name: Publish release
@@ -179,7 +179,7 @@ jobs:
           merge-multiple: true
 
       - name: Create or update GitHub release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ needs.prepare.outputs.release_tag }}
           name: ${{ needs.prepare.outputs.release_name }}
@@ -197,11 +197,4 @@ jobs:
           delete_workflows: true
           workflows_keep_day: 3
           gh_token: ${{ secrets.GITHUB_TOKEN }}
-        continue-on-error: true
-
-      - name: Cleanup Old Action Artifacts
-        uses: c-hive/gha-remove-artifacts@main
-        with:
-          age: '3 days'
-          skip-recent: 3
         continue-on-error: true
