@@ -31,8 +31,6 @@ jobs:
     steps:
       - name: Checkout source
         uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
 
       - name: Generate version metadata
         id: meta
@@ -108,8 +106,6 @@ jobs:
     steps:
       - name: Checkout source
         uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
 
       - name: Remove vmlinux-btf dependency for CI
         shell: bash
@@ -123,7 +119,7 @@ jobs:
           FEEDNAME: packages_ci
           PACKAGES: honk luci-app-honk
           NO_REFRESH_CHECK: true
-          V: s
+          NO_SHFMT_CHECK: true
 
       - name: Show built files
         shell: bash
@@ -166,6 +162,7 @@ jobs:
           name: ${{ matrix.arch }}-openwrt-${{ matrix.sdk }}
           path: dist/*
           if-no-files-found: error
+          compression-level: 0
           retention-days: 7
 
   release:
